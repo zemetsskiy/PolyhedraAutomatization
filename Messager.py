@@ -34,45 +34,42 @@ class Messager:
         logger.info(f"Адрес кошелька: {wallet_address}")
         logger.info(f"Баланс: {wallet_balance}")
 
-        messager_contract = web3.eth.contract(address=Web3.to_checksum_address(msg_sender_address['bsc']),
-                                              abi=abi)
+        try:
+            messager_contract = web3.eth.contract(address=Web3.to_checksum_address(msg_sender_address['bsc']),
+                                                  abi=abi)
 
-        lz_id = stargate_ids['polygon']
-        to_chain_id = chain_ids['polygon']
-        from_chain_id = chain_ids['bsc']
-        message = "Hello"
-        dst_address = Web3.to_checksum_address(dst_addresses['polygon'])
-        lzdst_address = Web3.to_checksum_address(lzdst_addresses['polygon'])
+            lz_id = stargate_ids['polygon']
+            to_chain_id = chain_ids['polygon']
+            from_chain_id = chain_ids['bsc']
+            message = "Hello"
+            dst_address = Web3.to_checksum_address(dst_addresses['polygon'])
+            lzdst_address = Web3.to_checksum_address(lzdst_addresses['polygon'])
 
+            tx = messager_contract.functions.zkSendMessage(to_chain_id, dst_address, wallet_address,
+                                                           message).build_transaction({
+                'from': wallet_address,
+                'value': fee['bsc'],
+                'nonce': web3.eth.get_transaction_count(wallet_address),
+                'gasPrice': int(1.5 * 10 ** 9)
+            })
 
-        tx = messager_contract.functions.zkSendMessage(to_chain_id, dst_address, wallet_address,
-                                          message).build_transaction({
-            'from': wallet_address,
-            'value': fee['bsc'],
+            signed_tx = web3.eth.account.sign_transaction(tx, private_key)
+            raw_tx_hash = web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = web3.to_hex(raw_tx_hash)
 
-            'nonce': web3.eth.get_transaction_count(wallet_address),
-            'gasPrice': int(1.5 * 10 ** 9)
-        })
+            logger.info(f"Хеш транзакции: {tx_hash}")
 
-        signed_tx = web3.eth.account.sign_transaction(tx, private_key)
-        raw_tx_hash = web3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        tx_hash = web3.to_hex(raw_tx_hash)
+            tx_receipt = web3.eth.wait_for_transaction_receipt(raw_tx_hash, timeout=300)
 
-        logger.info(f"Хеш транзакции: {tx_hash}")
+            if tx_receipt.status == 1:
+                logger.info(f"Сообщение успешно отправлено")
+                logger.info(f"Транзакция: https://bscscan.com/tx/{tx_hash}\n")
+            else:
+                logger.error("Произошла ошибка")
 
-        tx_receipt = web3.eth.wait_for_transaction_receipt(raw_tx_hash, timeout=300)
-
-        if tx_receipt.status == 1:
-            logger.info(f"Сообщение успешно отправлено.")
-            logger.info(f"Транзакция: https://bscscan.com/tx/{tx_hash}\n'")
-
-        else:
-            logger.error("Произошла ошибка")
-
-
-
-if __name__ == "__main__":
-    with open("private_keys.txt", "r") as file:
-        private_keys = [row.strip() for row in file]
-    for pk in private_keys:
-        Messager.messsage(pk)
+        except Exception as err:
+            err_str = str(err)
+            if "insufficient funds" in err_str:
+                logger.error("Не хватает газа для отправки сообщения")
+            else:
+                logger.error(f"Messager - {wallet_address}: {err}")
