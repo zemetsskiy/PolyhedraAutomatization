@@ -1,11 +1,9 @@
-from config.addresses import nft_addresses, bridge_addresses, scanners
 from moralis import evm_api
 from web3 import Web3
 from config.logger import logger
-from config.addresses import nft_addresses, rpcs, chain_ids, stargate_ids
-
-
-API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyNTIzNGQ3LTZlYjctNDFiNi1iNjQ1LTk2NmVmNTM1MjdlOSIsIm9yZ0lkIjoiMzQ3NzA3IiwidXNlcklkIjoiMzU3NDA5IiwidHlwZUlkIjoiYjI1MTA1MDMtZDk1Ni00ZDZhLTg3NTgtNTcyYWIwNTcyNDM0IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE2ODkwNjcxMjYsImV4cCI6NDg0NDgyNzEyNn0.sSSjEiOJ1WXTLoQSh8bRUoYRDdLtXJpq4TWkoadod2c"
+from config.addresses import nft_addresses, bridge_addresses
+from config.chains import chain_ids, stargate_ids
+from config.extra import rpcs, scanners, API_KEY
 
 
 class Bridger:
