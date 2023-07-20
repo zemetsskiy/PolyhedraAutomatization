@@ -1,5 +1,4 @@
 private_keys.txt
 .idea/
-config/addresses.py
 __pycache__/
 config/__pycache__/
